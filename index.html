@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saanvi - AI Learning Buddy</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase CDN (Compat versions) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <!-- React CDNs -->
+  <script src="https://cdn.jsdelivr.net/npm/react@17.0.2/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.16.4/babel.min.js"></script>
+  <style>
+    body { font-family: 'Lato', sans-serif; }
+    h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+    .gradient-bg { background: linear-gradient(to bottom, #003366, #66B2FF); }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+  <div id="root"></div>
+
+  <!-- Workbox CDN -->
+  <script src="https://storage.googleapis.com/workbox-cdn/releases/6.4.1/workbox-window.prod.umd.js"></script>
+  <script type="text/babel">
+    // Firebase Config (Replace with your Firebase project config)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAduK2MrymeemW7GfZKUxbLZa3y6pQaYLw",
+      authDomain: "saanvi-58295.firebaseapp.com",
+      projectId: "saanvi-58295",
+      storageBucket: "saanvi-58295.firebasestorage.app",
+      messagingSenderId: "486264746468",
+      appId: "1:486264746468:web:6877eb2b728091b6d557f1",
+      measurementId: "G-D838QQFS1R"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // React Components
+    const Home = ({ user, progress, motivationalQuote, currentCourse }) => (
+      <section id="home" class="mb-12">
+        <h1 class="text-4xl font-bold mb-8">Welcome to Saanvi, {user.email.split('@')[0]}!</h1>
+        <div class="bg-white text-gray-800 p-4 rounded shadow mb-6">
+          <h2 class="text-2xl font-bold mb-4">Analytics Dashboard</h2>
+          <p>Quizzes Completed: {progress.quizzes}</p>
+          <p>Assignments Submitted: {progress.assignments}</p>
+        </div>
+        <p class="text-lg">Current Course: {currentCourse || 'Not enrolled'}</p>
+        <p class="italic text-lg mt-4">"{motivationalQuote}"</p>
+      </section>
+    );
+
+    const Course = ({ user, learningStyle, quizScore, quiz2Unlocked, quiz2Score, assignment, setAssignment, assignment2, setAssignment2, assignment2Unlocked, feedback, setFeedback, sentiment, submitQuiz, submitQuiz2, submitAssignment, submitAssignment2, getRecommendation, getResource }) => {
+      if (!user || !learningStyle || !submitQuiz || !submitQuiz2 || !submitAssignment || !submitAssignment2 || !getRecommendation || !getResource) {
+        return <p class="text-red-500">Loading Course... Check console for errors. User: {user ? 'defined' : 'undefined'}, LearningStyle: {learningStyle || 'undefined'}</p>;
+      }
+      return (
+        <section id="course" class="mb-12">
+          <h2 class="text-2xl font-bold mb-4">Course: {getRecommendation()}</h2>
+          <div class="bg-white text-gray-800 p-4 rounded shadow mb-6">
+            <h3 class="text-lg font-bold">Lecture: Introduction to Math</h3>
+            <p class="mt-2">Learn the basics of arithmetic and problem-solving.</p>
+            <button class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Take Lecture</button>
+          </div>
+          <div class="bg-white text-gray-800 p-4 rounded shadow">
+            <h3 class="text-lg font-bold">Quiz</h3>
+            <div>
+              <h4 class="text-md font-bold">Quiz 1: Basic Math</h4>
+              <p>1. What is 2 + 2? <input type="number" id="q1" class="text-black p-1" /></p>
+              <p>2. What is 5 - 3? <input type="number" id="q2" class="text-black p-1" /></p>
+              <p>3. What is 4 × 2? <input type="number" id="q3" class="text-black p-1" /></p>
+              <button
+                onClick={() => {
+                  const score = (document.getElementById('q1').value == 4 ? 1 : 0) +
+                                (document.getElementById('q2').value == 2 ? 1 : 0) +
+                                (document.getElementById('q3').value == 8 ? 1 : 0);
+                  submitQuiz(score);
+                }}
+                class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+              >
+                Submit Quiz 1
+              </button>
+            </div>
+            {quiz2Unlocked && (
+              <div class="mt-6">
+                <h4 class="text-md font-bold">Quiz 2: Intermediate Math</h4>
+                <p>1. What is 10 ÷ 2? <input type="number" id="q4" class="text-black p-1" /></p>
+                <p>2. What is 3 × 4? <input type="number" id="q5" class="text-black p-1" /></p>
+                <p>3. What is 15 - 7? <input type="number" id="q6" class="text-black p-1" /></p>
+                <button
+                  onClick={() => {
+                    const score = (document.getElementById('q4').value == 5 ? 1 : 0) +
+                                  (document.getElementById('q5').value == 12 ? 1 : 0) +
+                                  (document.getElementById('q6').value == 8 ? 1 : 0);
+                    submitQuiz2(score);
+                  }}
+                  class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                >
+                  Submit Quiz 2
+                </button>
+              </div>
+            )}
+          </div>
+          <div class="bg-white text-gray-800 p-4 rounded shadow mt-6">
+            <h3 class="text-lg font-bold">Assignment</h3>
+            <div>
+              <h4 class="text-md font-bold">Assignment 1</h4>
+              <textarea
+                value={assignment}
+                onChange={(e) => setAssignment(e.target.value)}
+                placeholder="Write a short paragraph about fractions..."
+                class="w-full p-2 text-black rounded"
+              ></textarea>
+              <button
+                onClick={submitAssignment}
+                class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+              >
+                Submit Assignment 1
+              </button>
+            </div>
+            {assignment2Unlocked && (
+              <div class="mt-6">
+                <h4 class="text-md font-bold">Assignment 2</h4>
+                <textarea
+                  value={assignment2}
+                  onChange={(e) => setAssignment2(e.target.value)}
+                  placeholder="Explain the concept of percentages..."
+                  class="w-full p-2 text-black rounded"
+                ></textarea>
+                <button
+                  onClick={submitAssignment2}
+                  class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                >
+                  Submit Assignment 2
+                </button>
+              </div>
+            )}
+            {feedback && <p class="mt-4">Feedback: {feedback}</p>}
+            {sentiment && <p class="mt-2 italic">{sentiment}</p>}
+          </div>
+        </section>
+      );
+    };
+
+    const Doubts = ({ user, peerDoubts, setPeerDoubts, newDoubt, setNewDoubt, submitDoubt, solveDoubt, points }) => (
+      <section id="doubts" class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Doubts & Peer Help</h2>
+        <div class="bg-white text-gray-800 p-4 rounded shadow mb-4">
+          <textarea
+            value={newDoubt}
+            onChange={(e) => setNewDoubt(e.target.value)}
+            placeholder="Post a doubt or question..."
+            class="w-full p-2 text-black rounded"
+          ></textarea>
+          <button
+            onClick={submitDoubt}
+            class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          >
+            Post Doubt
+          </button>
+        </div>
+        <div class="space-y-4">
+          {peerDoubts.map(doubt => (
+            <div key={doubt.id} class="bg-gray-100 text-gray-800 p-4 rounded shadow">
+              <p class="font-bold">{doubt.user}</p>
+              <p>{doubt.content}</p>
+              {!doubt.solved && (
+                <button
+                  onClick={() => solveDoubt(doubt.id)}
+                  class="mt-2 bg-green-600 text-white py-1 px-3 rounded hover:bg-green-700"
+                >
+                  Solve Doubt (+10 points)
+                </button>
+              )}
+              {doubt.solved && <p class="mt-2 text-green-600">Solved by {doubt.solvedBy}</p>}
+            </div>
+          ))}
+        </div>
+        <p class="mt-4">Your Points: {points}</p>
+      </section>
+    );
+
+    const Logout = ({ logout }) => (
+      <section id="logout" class="mb-12">
+        <h2 class="text-2xl font-bold mb-4">Logout</h2>
+        <button
+          onClick={logout}
+          class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700"
+        >
+          Logout
+        </button>
+      </section>
+    );
+
+    const App = () => {
+      const [user, setUser] = React.useState(null);
+      const [learningStyle, setLearningStyle] = React.useState('visual');
+      const [quizScore, setQuizScore] = React.useState(null);
+      const [quiz2Unlocked, setQuiz2Unlocked] = React.useState(false);
+      const [quiz2Score, setQuiz2Score] = React.useState(null);
+      const [assignment, setAssignment] = React.useState('');
+      const [assignment2, setAssignment2] = React.useState('');
+      const [assignment2Unlocked, setAssignment2Unlocked] = React.useState(false);
+      const [feedback, setFeedback] = React.useState('');
+      const [progress, setProgress] = React.useState({ quizzes: 0, assignments: 0, points: 0 });
+      const [motivationalQuote, setMotivationalQuote] = React.useState('');
+      const [currentCourse, setCurrentCourse] = React.useState('');
+      const [peerDoubts, setPeerDoubts] = React.useState([]);
+      const [newDoubt, setNewDoubt] = React.useState('');
+      const [page, setPage] = React.useState('home');
+
+      React.useEffect(() => {
+        auth.onAuthStateChanged((u) => setUser(u));
+        if (user) {
+          db.collection('progress').doc(user.uid).get().then(doc => {
+            if (doc.exists) setProgress(doc.data());
+          });
+          db.collection('doubts').orderBy('timestamp', 'desc').get().then(snapshot => {
+            const doubts = [];
+            snapshot.forEach(doc => doubts.push({ id: doc.id, ...doc.data() }));
+            setPeerDoubts(doubts);
+          });
+        }
+        fetchMotivationalQuote();
+        updateCurrentCourse();
+      }, [user, quizScore, quiz2Score]);
+
+      const fetchMotivationalQuote = () => {
+        const quotes = [
+          "Keep pushing forward—you're closer than you think!",
+          "Every step you take is a victory—great job!",
+          "Believe in yourself; you're unstoppable!",
+          "Learning is a journey—enjoy every moment!",
+          "You've got this—keep shining bright!"
+        ];
+        setMotivationalQuote(quotes[Math.floor(Math.random() * quotes.length)]);
+      };
+
+      const updateCurrentCourse = () => {
+        const score = quiz2Score || quizScore;
+        if (score === null) setCurrentCourse('Math Basics');
+        else if (score >= 2) {
+          setCurrentCourse(
+            learningStyle === 'visual' ? 'Advanced Geometry' :
+            learningStyle === 'auditory' ? 'Advanced Algebra' :
+            'Advanced Calculus'
+          );
+        } else {
+          setCurrentCourse(
+            learningStyle === 'visual' ? 'Basic Geometry' :
+            learningStyle === 'auditory' ? 'Basic Algebra' :
+            'Basic Math'
+          );
+        }
+      };
+
+      const login = async () => {
+        try {
+          await auth.signInWithEmailAndPassword('test@saanvi.com', 'password123');
+        } catch (e) { alert('Login failed. Use test@saanvi.com/password123'); }
+      };
+
+      const logout = () => auth.signOut();
+
+      const analyzeSentiment = async (text) => {
+        try {
+          const response = await fetch('https://api-inference.huggingface.co/models/distilbert-base-uncased-finetuned-sst-2-english', {
+            method: 'POST',
+            headers: {
+              'Authorization': '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', // Replace with your key
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ inputs: text })
+          });
+          const data = await response.json();
+          if (data && data[0]) {
+            const sentimentLabel = data[0][0].label;
+            return sentimentLabel === 'POSITIVE' ? 'Great to see your positive energy!' : 'Looks like you might need a boost—keep going!';
+          }
+        } catch (e) {
+          return 'Let’s keep the momentum going!';
+        }
+      };
+
+      const submitQuiz = async (score) => {
+        setQuizScore(score);
+        await db.collection('progress').doc(user.uid).set({
+          quizzes: firebase.firestore.FieldValue.increment(1),
+          assignments: progress.assignments,
+          points: progress.points
+        }, { merge: true });
+        setProgress({ ...progress, quizzes: progress.quizzes + 1 });
+        if (score >= 2) setQuiz2Unlocked(true);
+        updateCurrentCourse();
+        fetchMotivationalQuote();
+      };
+
+      const submitQuiz2 = async (score) => {
+        setQuiz2Score(score);
+        await db.collection('progress').doc(user.uid).set({
+          quizzes: firebase.firestore.FieldValue.increment(1),
+          assignments: progress.assignments,
+          points: progress.points
+        }, { merge: true });
+        setProgress({ ...progress, quizzes: progress.quizzes + 1 });
+        updateCurrentCourse();
+        fetchMotivationalQuote();
+      };
+
+      const submitAssignment = async () => {
+        const response = await fetch('http://localhost:3000/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: assignment })
+        });
+        const data = await response.json();
+        const sentiment = await analyzeSentiment(assignment);
+        setFeedback(data.feedback);
+        setSentiment(sentiment);
+        await db.collection('progress').doc(user.uid).set({
+          quizzes: progress.quizzes,
+          assignments: firebase.firestore.FieldValue.increment(1),
+          points: progress.points
+        }, { merge: true });
+        setProgress({ ...progress, assignments: progress.assignments + 1 });
+        if (data.feedback.includes('Great')) setAssignment2Unlocked(true);
+        fetchMotivationalQuote();
+      };
+
+      const submitAssignment2 = async () => {
+        const response = await fetch('http://localhost:3000/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: assignment2 })
+        });
+        const data = await response.json();
+        const sentiment = await analyzeSentiment(assignment2);
+        setFeedback(data.feedback);
+        setSentiment(sentiment);
+        await db.collection('progress').doc(user.uid).set({
+          quizzes: progress.quizzes,
+          assignments: firebase.firestore.FieldValue.increment(1),
+          points: progress.points
+        }, { merge: true });
+        setProgress({ ...progress, assignments: progress.assignments + 1 });
+        fetchMotivationalQuote();
+      };
+
+      const submitDoubt = async () => {
+        if (!newDoubt) return;
+        await db.collection('doubts').add({
+          user: user.email,
+          content: newDoubt,
+          solved: false,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        setNewDoubt('');
+        const snapshot = await db.collection('doubts').orderBy('timestamp', 'desc').get();
+        const doubts = [];
+        snapshot.forEach(doc => doubts.push({ id: doc.id, ...doc.data() }));
+        setPeerDoubts(doubts);
+      };
+
+      const solveDoubt = async (doubtId) => {
+        await db.collection('doubts').doc(doubtId).update({
+          solved: true,
+          solvedBy: user.email
+        });
+        await db.collection('progress').doc(user.uid).set({
+          quizzes: progress.quizzes,
+          assignments: progress.assignments,
+          points: firebase.firestore.FieldValue.increment(10)
+        }, { merge: true });
+        setProgress({ ...progress, points: progress.points + 10 });
+        const snapshot = await db.collection('doubts').orderBy('timestamp', 'desc').get();
+        const doubts = [];
+        snapshot.forEach(doc => doubts.push({ id: doc.id, ...doc.data() }));
+        setPeerDoubts(doubts);
+      };
+
+      const getRecommendation = () => {
+        const score = quiz2Score || quizScore;
+        if (score === null) return 'Math Basics';
+        if (score >= 2) {
+          return learningStyle === 'visual' ? 'Advanced Geometry' :
+                 learningStyle === 'auditory' ? 'Advanced Algebra' :
+                 'Advanced Calculus';
+        }
+        return learningStyle === 'visual' ? 'Basic Geometry' :
+               learningStyle === 'auditory' ? 'Basic Algebra' :
+               'Basic Math';
+      };
+
+      const getResource = () => {
+        if (learningStyle === 'visual') {
+          return '<img src="https://via.placeholder.com/300" alt="Math Diagram" class="w-full">';
+        } else if (learningStyle === 'auditory') {
+          return '<p>Listen to this explanation: "Fractions divide a whole into equal parts."</p>';
+        } else {
+          return '<p>Try splitting a number into parts: <input type="number" placeholder="e.g., 4" class="text-black p-1"></p>';
+        }
+      };
+
+      if (!user) {
+        return (
+          <div class="p-8 max-w-md mx-auto mt-20 bg-white text-gray-800 rounded-lg shadow-lg">
+            <h1 class="text-3xl font-bold text-center mb-4">Saanvi</h1>
+            <p class="text-center mb-4">Your AI Learning Buddy</p>
+            <button onClick={login} class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+              Login (test@saanvi.com)
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div class="flex min-h-screen">
+          <div class="w-64 bg-gray-800 p-4">
+            <h2 class="text-2xl font-bold mb-4">Saanvi</h2>
+            <nav>
+              <a href="#home" onClick={() => { setPage('home'); console.log('Navigating to Home, page:', page); }} class="block py-2 text-white hover:bg-gray-700">Home</a>
+              <a href="#course" onClick={() => { setPage('course'); console.log('Navigating to Course, page:', page); }} class="block py-2 text-white hover:bg-gray-700">Course</a>
+              <a href="#doubts" onClick={() => { setPage('doubts'); console.log('Navigating to Doubts, page:', page); }} class="block py-2 text-white hover:bg-gray-700">Doubts</a>
+              <a href="#logout" onClick={() => { setPage('logout'); console.log('Navigating to Logout, page:', page); }} class="block py-2 text-white hover:bg-gray-700">Logout</a>
+            </nav>
+          </div>
+          <div class="flex-1 p-8">
+            {page === 'home' && <Home user={user} progress={progress} motivationalQuote={motivationalQuote} currentCourse={currentCourse} />}
+            {page === 'course' && (
+              <div>
+                <p>Rendering Course, page: {page}</p>
+                <Course
+                  user={user}
+                  learningStyle={learningStyle}
+                  quizScore={quizScore}
+                  quiz2Unlocked={quiz2Unlocked}
+                  quiz2Score={quiz2Score}
+                  assignment={assignment}
+                  setAssignment={setAssignment}
+                  assignment2={assignment2}
+                  setAssignment2={setAssignment2}
+                  assignment2Unlocked={assignment2Unlocked}
+                  feedback={feedback}
+                  setFeedback={setFeedback}
+                  sentiment={sentiment}
+                  submitQuiz={submitQuiz}
+                  submitQuiz2={submitQuiz2}
+                  submitAssignment={submitAssignment}
+                  submitAssignment2={submitAssignment2}
+                  getRecommendation={getRecommendation}
+                  getResource={getResource}
+                />
+              </div>
+            )}
+            {page === 'doubts' && (
+              <Doubts
+                user={user}
+                peerDoubts={peerDoubts}
+                setPeerDoubts={setPeerDoubts}
+                newDoubt={newDoubt}
+                setNewDoubt={setNewDoubt}
+                submitDoubt={submitDoubt}
+                solveDoubt={solveDoubt}
+                points={progress.points}
+              />
+            )}
+            {page === 'logout' && <Logout logout={logout} />}
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
