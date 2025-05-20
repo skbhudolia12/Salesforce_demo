@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,11 +16,22 @@
   <script src="https://cdn.jsdelivr.net/npm/react-dom@17.0.2/umd/react-dom.production.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.16.4/babel.min.js"></script>
   <style>
-    body { font-family: 'Lato', sans-serif; }
-    h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
-    .gradient-bg { background: linear-gradient(to bottom, #003366, #66B2FF); }
+    body {
+      font-family: 'Lato', sans-serif;
+    }
+
+    h1,
+    h2,
+    h3 {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .gradient-bg {
+      background: linear-gradient(to bottom, #003366, #66B2FF);
+    }
   </style>
 </head>
+
 <body class="gradient-bg min-h-screen text-white">
   <div id="root"></div>
 
@@ -41,110 +53,176 @@
     const db = firebase.firestore();
 
     // React Components
-    const Home = ({ user, progress, motivationalQuote, currentCourse }) => (
-      <section id="home" class="mb-12">
-        <h1 class="text-4xl font-bold mb-8">Welcome to Saanvi, {user.email.split('@')[0]}!</h1>
-        <div class="bg-white text-gray-800 p-4 rounded shadow mb-6">
-          <h2 class="text-2xl font-bold mb-4">Analytics Dashboard</h2>
-          <p>Quizzes Completed: {progress.quizzes}</p>
-          <p>Assignments Submitted: {progress.assignments}</p>
-        </div>
-        <p class="text-lg">Current Course: {currentCourse || 'Not enrolled'}</p>
-        <p class="italic text-lg mt-4">"{motivationalQuote}"</p>
-      </section>
-    );
+    const Home = ({ user, progress, motivationalQuote, currentCourse, quizScore, quiz2Unlocked, quiz2Score }) => {
+      // count only fully correct quizzes
+      const completedQuizzes = (quizScore === 3 ? 1 : 0) + (quiz2Unlocked && quiz2Score === 3 ? 1 : 0);
+      const totalQuizzes = 2;
+      // assignments capped at 2
+      const submittedAssignments = Math.min(progress.assignments || 0, 1);
+      const totalAssignments = 1;
 
-    const Course = ({ user, learningStyle, quizScore, quiz2Unlocked, quiz2Score, assignment, setAssignment, assignment2, setAssignment2, assignment2Unlocked, feedback, setFeedback, sentiment, setSentiment, submitQuiz, submitQuiz2, submitAssignment, submitAssignment2, getRecommendation, getResource }) => {
-      if (!user || !learningStyle || !submitQuiz || !submitQuiz2 || !submitAssignment || !submitAssignment2 || !getRecommendation || !getResource) {
-        return <p class="text-red-500">Loading Course... Check console for errors. User: {user ? 'defined' : 'undefined'}, LearningStyle: {learningStyle || 'undefined'}</p>;
-      }
       return (
-        <section id="course" class="mb-12">
-          <h2 class="text-2xl font-bold mb-4">Course: {getRecommendation()}</h2>
+        <section id="home" className="mb-12">
+          <h1 className="text-4xl font-bold mb-8">
+            Welcome to Saanvi, {user.email.split('@')[0]}!
+          </h1>
+          <div className="bg-white text-gray-800 p-4 rounded shadow mb-6">
+            <h2 className="text-2xl font-bold mb-4">Analytics Dashboard</h2>
+            <p>Quizzes Completed: {completedQuizzes}/{totalQuizzes}</p>
+            <p>Assignments Submitted: {submittedAssignments}/{totalAssignments}</p>
+          </div>
+          <p className="text-lg">Current Course: {currentCourse || 'Not enrolled'}</p>
+          <p className="italic text-lg mt-4">"{motivationalQuote}"</p>
+        </section>
+      );
+    };
+    const Course = ({
+      user,
+      learningStyle,
+      quizScore,
+      quiz2Unlocked,
+      quiz2Score,
+      assignment,
+      setAssignment,
+      assignment2,
+      setAssignment2,
+      assignment2Unlocked,
+      feedback,
+      sentiment,
+      submitQuiz,
+      submitQuiz2,
+      submitAssignment,
+      submitAssignment2,
+      getRecommendation,
+      getResource
+    }) => {
+      const [quizMessage, setQuizMessage] = React.useState('');
+      const [quiz2Message, setQuiz2Message] = React.useState('');
+
+      if (
+        !user ||
+        !learningStyle ||
+        typeof submitQuiz !== 'function' ||
+        typeof submitQuiz2 !== 'function' ||
+        typeof submitAssignment !== 'function' ||
+        typeof submitAssignment2 !== 'function' ||
+        typeof getRecommendation !== 'function'
+      ) {
+        return <p className="text-red-500">Loading Course…</p>;
+      }
+
+      return (
+        <section id="course" className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">Course: {getRecommendation()}</h2>
+
+          {/* Lecture Content */}
           <div class="bg-white text-gray-800 p-4 rounded shadow mb-6">
             <h3 class="text-lg font-bold">Lecture: Introduction to Math</h3>
             <p class="mt-2">Learn the basics of arithmetic and problem-solving.</p>
             <button class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Take Lecture</button>
           </div>
-          <div class="bg-white text-gray-800 p-4 rounded shadow">
-            <h3 class="text-lg font-bold">Quiz</h3>
-            <div>
-              <h4 class="text-md font-bold">Quiz 1: Basic Math</h4>
-              <p>1. What is 2 + 2? <input type="number" id="q1" class="text-black p-1" /></p>
-              <p>2. What is 5 - 3? <input type="number" id="q2" class="text-black p-1" /></p>
-              <p>3. What is 4 × 2? <input type="number" id="q3" class="text-black p-1" /></p>
+
+          {/* Quiz 1 */}
+          <div className="bg-white text-gray-800 p-4 rounded shadow mb-6">
+            <h3 className="text-lg font-bold">Quiz 1: Basic Math</h3>
+            {[['2 + 2', 'q1'], ['5 - 3', 'q2'], ['4 × 2', 'q3']].map(([text, id]) => (
+              <p key={id}>
+                {text}? <input type="number" id={id} className="text-black p-1" />
+              </p>
+            ))}
+            <button
+              onClick={() => {
+                const answers = [
+                  +document.getElementById('q1').value === 4,
+                  +document.getElementById('q2').value === 2,
+                  +document.getElementById('q3').value === 8
+                ];
+                const score = answers.filter(Boolean).length;
+                submitQuiz(score);
+                setQuizMessage(score === 3 ? 'All correct!' : `Try again! You got ${score}/3 correct.`);
+              }}
+              className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+              Submit Quiz 1
+            </button>
+            {quizMessage && <p className="mt-2 text-sm italic">{quizMessage}</p>}
+          </div>
+
+          {/* Quiz 2 */}
+          {quiz2Unlocked && (
+            <div className="bg-white text-gray-800 p-4 rounded shadow mb-6">
+              <h3 className="text-lg font-bold">Quiz 2: Intermediate Math</h3>
+              {[['10 ÷ 2', 'q4'], ['3 × 4', 'q5'], ['15 - 7', 'q6']].map(([text, id]) => (
+                <p key={id}>
+                  {text}? <input type="number" id={id} className="text-black p-1" />
+                </p>
+              ))}
               <button
                 onClick={() => {
-                  const score = (document.getElementById('q1').value == 4 ? 1 : 0) +
-                                (document.getElementById('q2').value == 2 ? 1 : 0) +
-                                (document.getElementById('q3').value == 8 ? 1 : 0);
-                  submitQuiz(score);
+                  const answers = [
+                    +document.getElementById('q4').value === 5,
+                    +document.getElementById('q5').value === 12,
+                    +document.getElementById('q6').value === 8
+                  ];
+                  const score = answers.filter(Boolean).length;
+                  submitQuiz2(score);
+                  setQuiz2Message(score === 3 ? 'All correct!' : `Try again! You got ${score}/3 correct.`);
                 }}
-                class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                className="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
               >
-                Submit Quiz 1
+                Submit Quiz 2
               </button>
+              {quiz2Message && <p className="mt-2 text-sm italic">{quiz2Message}</p>}
             </div>
-            {quiz2Unlocked && (
-              <div class="mt-6">
-                <h4 class="text-md font-bold">Quiz 2: Intermediate Math</h4>
-                <p>1. What is 10 ÷ 2? <input type="number" id="q4" class="text-black p-1" /></p>
-                <p>2. What is 3 × 4? <input type="number" id="q5" class="text-black p-1" /></p>
-                <p>3. What is 15 - 7? <input type="number" id="q6" class="text-black p-1" /></p>
-                <button
-                  onClick={() => {
-                    const score = (document.getElementById('q4').value == 5 ? 1 : 0) +
-                                  (document.getElementById('q5').value == 12 ? 1 : 0) +
-                                  (document.getElementById('q6').value == 8 ? 1 : 0);
-                    submitQuiz2(score);
-                  }}
-                  class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                >
-                  Submit Quiz 2
-                </button>
-              </div>
-            )}
+          )}
+
+          {/* Assignment 1 */}
+          <div className="bg-white text-gray-800 p-4 rounded shadow mb-6">
+            <h3 className="text-lg font-bold">Assignment 1</h3>
+            <textarea
+              value={assignment}
+              onChange={(e) => setAssignment(e.target.value)}
+              className="w-full h-24 text-black p-2"
+            />
+            <button
+              onClick={submitAssignment}
+              className="mt-2 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+            >
+              Submit Assignment 1
+            </button>
           </div>
-          <div class="bg-white text-gray-800 p-4 rounded shadow mt-6">
-            <h3 class="text-lg font-bold">Assignment</h3>
-            <div>
-              <h4 class="text-md font-bold">Assignment 1</h4>
+
+          {/* Assignment 2 */}
+          {assignment2Unlocked && (
+            <div className="bg-white text-gray-800 p-4 rounded shadow mb-6">
+              <h3 className="text-lg font-bold">Assignment 2</h3>
               <textarea
-                value={assignment}
-                onChange={(e) => setAssignment(e.target.value)}
-                placeholder="Write a short paragraph about fractions..."
-                class="w-full p-2 text-black rounded"
-              ></textarea>
+                value={assignment2}
+                onChange={(e) => setAssignment2(e.target.value)}
+                className="w-full h-24 text-black p-2"
+              />
               <button
-                onClick={submitAssignment}
-                class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                onClick={submitAssignment2}
+                className="mt-2 bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
               >
-                Submit Assignment 1
+                Submit Assignment 2
               </button>
             </div>
-            {assignment2Unlocked && (
-              <div class="mt-6">
-                <h4 class="text-md font-bold">Assignment 2</h4>
-                <textarea
-                  value={assignment2}
-                  onChange={(e) => setAssignment2(e.target.value)}
-                  placeholder="Explain the concept of percentages..."
-                  class="w-full p-2 text-black rounded"
-                ></textarea>
-                <button
-                  onClick={submitAssignment2}
-                  class="mt-4 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
-                >
-                  Submit Assignment 2
-                </button>
-              </div>
-            )}
-            {feedback && <p class="mt-4">Feedback: {feedback}</p>}
-            {sentiment && <p class="mt-2 italic">{sentiment}</p>}
-          </div>
+          )}
+
+          {/* Feedback Section */}
+          {feedback && (
+            <div className="bg-white text-gray-800 p-4 rounded shadow">
+              <h3 className="text-lg font-bold">Feedback</h3>
+              <p>{feedback}</p>
+              {sentiment && <p>Sentiment: {sentiment}</p>}
+            </div>
+          )}
         </section>
       );
     };
+
+
 
     const Doubts = ({ user, peerDoubts, setPeerDoubts, newDoubt, setNewDoubt, submitDoubt, solveDoubt, points }) => (
       <section id="doubts" class="mb-12">
@@ -218,7 +296,17 @@
         auth.onAuthStateChanged((u) => setUser(u));
         if (user) {
           db.collection('progress').doc(user.uid).get().then(doc => {
-            if (doc.exists) setProgress(doc.data());
+            if (doc.exists) {
+              const data = doc.data();
+              setProgress(data);
+              if (data.quizScore != null) {
+                setQuizScore(data.quizScore);
+                if (data.quizScore >= 2) setQuiz2Unlocked(true);
+              }
+              if (data.quiz2Score != null) {
+                setQuiz2Score(data.quiz2Score);
+              }
+            }
           });
           db.collection('doubts').orderBy('timestamp', 'desc').get().then(snapshot => {
             const doubts = [];
@@ -247,14 +335,14 @@
         else if (score >= 2) {
           setCurrentCourse(
             learningStyle === 'visual' ? 'Advanced Geometry' :
-            learningStyle === 'auditory' ? 'Advanced Algebra' :
-            'Advanced Calculus'
+              learningStyle === 'auditory' ? 'Advanced Algebra' :
+                'Advanced Calculus'
           );
         } else {
           setCurrentCourse(
             learningStyle === 'visual' ? 'Basic Geometry' :
-            learningStyle === 'auditory' ? 'Basic Algebra' :
-            'Basic Math'
+              learningStyle === 'auditory' ? 'Basic Algebra' :
+                'Basic Math'
           );
         }
       };
@@ -292,7 +380,8 @@
         await db.collection('progress').doc(user.uid).set({
           quizzes: firebase.firestore.FieldValue.increment(1),
           assignments: progress.assignments,
-          points: progress.points
+          points: progress.points,
+          quizScore: score
         }, { merge: true });
         setProgress({ ...progress, quizzes: progress.quizzes + 1 });
         if (score >= 2) setQuiz2Unlocked(true);
@@ -305,7 +394,8 @@
         await db.collection('progress').doc(user.uid).set({
           quizzes: firebase.firestore.FieldValue.increment(1),
           assignments: progress.assignments,
-          points: progress.points
+          points: progress.points,
+          quiz2Score: score
         }, { merge: true });
         setProgress({ ...progress, quizzes: progress.quizzes + 1 });
         updateCurrentCourse();
@@ -388,12 +478,12 @@
         if (score === null) return 'Math Basics';
         if (score >= 2) {
           return learningStyle === 'visual' ? 'Advanced Geometry' :
-                 learningStyle === 'auditory' ? 'Advanced Algebra' :
-                 'Advanced Calculus';
+            learningStyle === 'auditory' ? 'Advanced Algebra' :
+              'Advanced Calculus';
         }
         return learningStyle === 'visual' ? 'Basic Geometry' :
-               learningStyle === 'auditory' ? 'Basic Algebra' :
-               'Basic Math';
+          learningStyle === 'auditory' ? 'Basic Algebra' :
+            'Basic Math';
       };
 
       const getResource = () => {
@@ -430,10 +520,20 @@
             </nav>
           </div>
           <div class="flex-1 p-8">
-            {page === 'home' && <Home user={user} progress={progress} motivationalQuote={motivationalQuote} currentCourse={currentCourse} />}
+            {page === 'home' && (
+              <Home
+                user={user}
+                progress={progress}
+                motivationalQuote={motivationalQuote}
+                currentCourse={currentCourse}
+                quizScore={quizScore}
+                quiz2Unlocked={quiz2Unlocked}
+                quiz2Score={quiz2Score}
+              />
+            )}
+
             {page === 'course' && (
               <div>
-                <p>Rendering Course, page: {page}</p>
                 <Course
                   user={user}
                   learningStyle={learningStyle}
@@ -479,4 +579,5 @@
     ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
+
 </html>
