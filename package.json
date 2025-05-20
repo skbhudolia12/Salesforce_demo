@@ -11,7 +11,16 @@
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "serve": "^14.2.4"
   },
-  "description": ""
+  "description": "Salesforce demo hackathon",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skbhudolia12/Salesforce_demo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skbhudolia12/Salesforce_demo/issues"
+  },
+  "homepage": "https://github.com/skbhudolia12/Salesforce_demo#readme"
 }
