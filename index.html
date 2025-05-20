@@ -54,7 +54,7 @@
       </section>
     );
 
-    const Course = ({ user, learningStyle, quizScore, quiz2Unlocked, quiz2Score, assignment, setAssignment, assignment2, setAssignment2, assignment2Unlocked, feedback, setFeedback, sentiment, submitQuiz, submitQuiz2, submitAssignment, submitAssignment2, getRecommendation, getResource }) => {
+    const Course = ({ user, learningStyle, quizScore, quiz2Unlocked, quiz2Score, assignment, setAssignment, assignment2, setAssignment2, assignment2Unlocked, feedback, setFeedback, sentiment, setSentiment, submitQuiz, submitQuiz2, submitAssignment, submitAssignment2, getRecommendation, getResource }) => {
       if (!user || !learningStyle || !submitQuiz || !submitQuiz2 || !submitAssignment || !submitAssignment2 || !getRecommendation || !getResource) {
         return <p class="text-red-500">Loading Course... Check console for errors. User: {user ? 'defined' : 'undefined'}, LearningStyle: {learningStyle || 'undefined'}</p>;
       }
@@ -206,6 +206,7 @@
       const [assignment2, setAssignment2] = React.useState('');
       const [assignment2Unlocked, setAssignment2Unlocked] = React.useState(false);
       const [feedback, setFeedback] = React.useState('');
+      const [sentiment, setSentiment] = React.useState(''); // Added sentiment state
       const [progress, setProgress] = React.useState({ quizzes: 0, assignments: 0, points: 0 });
       const [motivationalQuote, setMotivationalQuote] = React.useState('');
       const [currentCourse, setCurrentCourse] = React.useState('');
@@ -318,9 +319,9 @@
           body: JSON.stringify({ text: assignment })
         });
         const data = await response.json();
-        const sentiment = await analyzeSentiment(assignment);
+        const sentimentResult = await analyzeSentiment(assignment);
         setFeedback(data.feedback);
-        setSentiment(sentiment);
+        setSentiment(sentimentResult); // Use setSentiment to update state
         await db.collection('progress').doc(user.uid).set({
           quizzes: progress.quizzes,
           assignments: firebase.firestore.FieldValue.increment(1),
@@ -338,9 +339,9 @@
           body: JSON.stringify({ text: assignment2 })
         });
         const data = await response.json();
-        const sentiment = await analyzeSentiment(assignment2);
+        const sentimentResult = await analyzeSentiment(assignment2);
         setFeedback(data.feedback);
-        setSentiment(sentiment);
+        setSentiment(sentimentResult); // Use setSentiment to update state
         await db.collection('progress').doc(user.uid).set({
           quizzes: progress.quizzes,
           assignments: firebase.firestore.FieldValue.increment(1),
@@ -447,6 +448,7 @@
                   feedback={feedback}
                   setFeedback={setFeedback}
                   sentiment={sentiment}
+                  setSentiment={setSentiment}
                   submitQuiz={submitQuiz}
                   submitQuiz2={submitQuiz2}
                   submitAssignment={submitAssignment}
